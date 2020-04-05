@@ -5,7 +5,7 @@ extern crate quote;
 #[macro_use]
 extern crate darling;
 
-
+use crate::darling::FromMeta;
 use proc_macro;
 
 #[derive(Debug, FromMeta)]
@@ -21,17 +21,27 @@ struct MacroArgs {
 }
 
 #[proc_macro_attribute]
-pub fn observe(metadata: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn observe(
+    metadata: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let attr_args = parse_macro_input!(metadata as syn::AttributeArgs);
-    let input_fn: syn::ItemFn = parse_macro_input!(input as syn::ItemFn);
-    quote!().into()
-    //proc_macro::TokenStream::from(expanded)
-}
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
+    let args: MacroArgs = match MacroArgs::from_list(&attr_args) {
+        Ok(v) => v,
+        Err(err) => {
+            return proc_macro::TokenStream::from(err.write_errors());
+        }
+    };
+
+    let input_fn: syn::ItemFn = parse_macro_input!(input as syn::ItemFn);
+    let vis = input_fn.vis;
+    let sig = input_fn.sig;
+    let block = input_fn.block;
+    quote!(
+        #vis #sig {
+            #block
+        }
+    )
+    .into()
 }

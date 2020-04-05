@@ -1,2 +1,2 @@
 [workspace]
-members = ["rsobserve", "rsobserve_attrs"]
+members = ["rsobserve", "rsobserve_attrs", "example"]
